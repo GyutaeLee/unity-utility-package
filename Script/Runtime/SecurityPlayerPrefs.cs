@@ -6,12 +6,12 @@ namespace qbot.Utility
     public static class SecurityPlayerPrefs
     {
         #region Fields
-        private static readonly string saltForKey;
-        private static readonly byte[] keys;
-        private static readonly byte[] iv;
-        private static readonly int keySize = 256;
-        private static readonly int blockSize = 128;
-        private static readonly int hashLen = 32;
+        private static readonly string SaltForKey;
+        private static readonly byte[] Keys;
+        private static readonly byte[] Iv;
+        private const int KEY_SIZE = 256;
+        private const int BLOCK_SIZE = 128;
+        private const int HASH_LEN = 32;
         #endregion
 
         #region Constructor
@@ -21,9 +21,9 @@ namespace qbot.Utility
              * Be sure to include the values of [slatBytes], [randomSeedForKey], [and randomSeedForValue].
              * 
              * [Example] 
-             * byte[] saltBytes = new byte[] { 36, 45, 11, 29, 94, 37, 85, 17 };
-             * string randomSeedForKey = "5b6fcb4aaa0a42acae649eba45a506ec";
-             * string randomSeedForValue = "24c79fmh24hfcaufc429cf824a8924mcfi";
+             * var saltBytes = new byte[] { 36, 45, 11, 29, 94, 37, 85, 17 };
+             * var randomSeedForKey = "5b6fcb4aaa0a42acae649eba45a506ec";
+             * var randomSeedForValue = "24c79fmh24hfcaufc429cf824a8924mcfi";
              */
 
             // it must be 8 bytes
@@ -37,13 +37,13 @@ namespace qbot.Utility
 
             {
                 var key = new Rfc2898DeriveBytes(randomSeedForKey, saltBytes, 1000);
-                saltForKey = System.Convert.ToBase64String(key.GetBytes(blockSize / 8));
+                SaltForKey = System.Convert.ToBase64String(key.GetBytes(BLOCK_SIZE / 8));
             }
 
             {
                 var key = new Rfc2898DeriveBytes(randomSeedForValue, saltBytes, 1000);
-                keys = key.GetBytes(keySize / 8);
-                iv = key.GetBytes(blockSize / 8);
+                Keys = key.GetBytes(KEY_SIZE / 8);
+                Iv = key.GetBytes(BLOCK_SIZE / 8);
             }
         }
         #endregion
@@ -51,7 +51,7 @@ namespace qbot.Utility
         #region Public functions
         public static void DeleteKey(string key)
         {
-            UnityEngine.PlayerPrefs.DeleteKey(MakeHash(key + saltForKey));
+            UnityEngine.PlayerPrefs.DeleteKey(MakeHash(key + SaltForKey));
         }
 
         public static void DeleteAll()
@@ -92,7 +92,7 @@ namespace qbot.Utility
         public static bool GetBool(string key, bool defaultValue)
         {
             var originalValue = GetSecurityValue(key);
-            if (true == string.IsNullOrEmpty(originalValue))
+            if (string.IsNullOrEmpty(originalValue))
                 return defaultValue;
 
             if (false == bool.TryParse(originalValue, out var result))
@@ -104,7 +104,7 @@ namespace qbot.Utility
         public static int GetInt(string key, int defaultValue)
         {
             var originalValue = GetSecurityValue(key);
-            if (true == string.IsNullOrEmpty(originalValue))
+            if (string.IsNullOrEmpty(originalValue))
                 return defaultValue;
 
             if (false == int.TryParse(originalValue, out var result))
@@ -116,7 +116,7 @@ namespace qbot.Utility
         public static long GetLong(string key, long defaultValue)
         {
             var originalValue = GetSecurityValue(key);
-            if (true == string.IsNullOrEmpty(originalValue))
+            if (string.IsNullOrEmpty(originalValue))
                 return defaultValue;
 
             if (false == long.TryParse(originalValue, out var result))
@@ -128,7 +128,7 @@ namespace qbot.Utility
         public static float GetFloat(string key, float defaultValue)
         {
             var originalValue = GetSecurityValue(key);
-            if (true == string.IsNullOrEmpty(originalValue))
+            if (string.IsNullOrEmpty(originalValue))
                 return defaultValue;
 
             if (false == float.TryParse(originalValue, out var result))
@@ -141,7 +141,7 @@ namespace qbot.Utility
         {
             var originalValue = GetSecurityValue(key);
 
-            if (true == string.IsNullOrEmpty(originalValue))
+            if (string.IsNullOrEmpty(originalValue))
                 return defaultValue;
 
             return originalValue;
@@ -156,9 +156,9 @@ namespace qbot.Utility
             var hashBytes = md5.ComputeHash(bytes);
 
             var hashToString = "";
-            for (var i = 0; i < hashBytes.Length; ++i)
+            foreach (var t in hashBytes)
             {
-                hashToString += hashBytes[i].ToString("x2");
+                hashToString += t.ToString("x2");
             }
 
             return hashToString;
@@ -167,11 +167,11 @@ namespace qbot.Utility
         public static byte[] Encrypt(byte[] bytesToBeEncrypted)
         {
             using var aes = new RijndaelManaged();
-            aes.KeySize = keySize;
-            aes.BlockSize = blockSize;
+            aes.KeySize = KEY_SIZE;
+            aes.BlockSize = BLOCK_SIZE;
 
-            aes.Key = keys;
-            aes.IV = iv;
+            aes.Key = Keys;
+            aes.IV = Iv;
 
             aes.Mode = CipherMode.CBC;
             aes.Padding = PaddingMode.PKCS7;
@@ -184,11 +184,11 @@ namespace qbot.Utility
         {
             using var aes = new RijndaelManaged();
 
-            aes.KeySize = keySize;
-            aes.BlockSize = blockSize;
+            aes.KeySize = KEY_SIZE;
+            aes.BlockSize = BLOCK_SIZE;
 
-            aes.Key = keys;
-            aes.IV = iv;
+            aes.Key = Keys;
+            aes.IV = Iv;
 
             aes.Mode = CipherMode.CBC;
             aes.Padding = PaddingMode.PKCS7;
@@ -215,7 +215,7 @@ namespace qbot.Utility
 
         private static void SetSecurityValue(string key, string value)
         {
-            var hideKey = MakeHash(key + saltForKey);
+            var hideKey = MakeHash(key + SaltForKey);
             var encryptValue = Encrypt(value + MakeHash(value));
 
             UnityEngine.PlayerPrefs.SetString(hideKey, encryptValue);
@@ -223,18 +223,18 @@ namespace qbot.Utility
 
         private static string GetSecurityValue(string key)
         {
-            var hideKey = MakeHash(key + saltForKey);
+            var hideKey = MakeHash(key + SaltForKey);
 
             var encryptValue = UnityEngine.PlayerPrefs.GetString(hideKey);
-            if (true == string.IsNullOrEmpty(encryptValue))
+            if (string.IsNullOrEmpty(encryptValue))
                 return string.Empty;
 
             var valueAndHash = Decrypt(encryptValue);
-            if (hashLen > valueAndHash.Length)
+            if (HASH_LEN > valueAndHash.Length)
                 return string.Empty;
 
-            var savedValue = valueAndHash.Substring(0, valueAndHash.Length - hashLen);
-            var savedHash = valueAndHash.Substring(valueAndHash.Length - hashLen);
+            var savedValue = valueAndHash.Substring(0, valueAndHash.Length - HASH_LEN);
+            var savedHash = valueAndHash.Substring(valueAndHash.Length - HASH_LEN);
 
             if (MakeHash(savedValue) != savedHash)
                 return string.Empty;
