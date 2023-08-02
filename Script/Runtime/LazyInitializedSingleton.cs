@@ -9,24 +9,24 @@ namespace qbot.Utility
         {
             get
             {
-                if (instance == null)
+                if (instance != null)
                 {
-                    instance = FindObjectOfType<T>();
-                    if (instance == null)
-                    {
-                        var obj = new GameObject(typeof(T).Name);
-                        instance = obj.AddComponent<T>();
-                    }
-
                     return instance;
                 }
+                
+                instance = FindObjectOfType<T>();
+                if (instance != null)
+                {
+                    return instance;
+                }
+                
+                var obj = new GameObject(typeof(T).Name);
+                instance = obj.AddComponent<T>();
 
                 return instance;
+
             }
-            set
-            {
-                instance = value;
-            }
+            set => instance = value;
         }
     }
 }
