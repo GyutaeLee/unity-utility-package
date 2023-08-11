@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace qbot.Utility
 {
-    public class LazyInitializedSingleton<T> : MonoBehaviour where T : Component
+    public class MonoBehaviourSingleton<T> : MonoBehaviour where T : Component
     {
         private static T instance;
         public static T Instance
