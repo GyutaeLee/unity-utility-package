@@ -5,22 +5,19 @@ namespace qbot.Utility
 {
     public static class SecurityPlayerPrefs
     {
-        #region Fields
         private static readonly string SaltForKey;
         private static readonly byte[] Keys;
         private static readonly byte[] Iv;
-        private const int KEY_SIZE = 256;
-        private const int BLOCK_SIZE = 128;
-        private const int HASH_LEN = 32;
-        #endregion
+        private const int KeySize = 256;
+        private const int BlockSize = 128;
+        private const int HashLen = 32;
 
-        #region Constructor
         static SecurityPlayerPrefs()
         {
             /*
              * Be sure to include the values of [slatBytes], [randomSeedForKey], [and randomSeedForValue].
-             * 
-             * [Example] 
+             *
+             * [Example]
              * var saltBytes = new byte[] { 36, 45, 11, 29, 94, 37, 85, 17 };
              * var randomSeedForKey = "5b6fcb4aaa0a42acae649eba45a506ec";
              * var randomSeedForValue = "24c79fmh24hfcaufc429cf824a8924mcfi";
@@ -36,19 +33,17 @@ namespace qbot.Utility
             var randomSeedForValue = "";
 
             {
-                var key = new Rfc2898DeriveBytes(randomSeedForKey, saltBytes, 1000);
-                SaltForKey = System.Convert.ToBase64String(key.GetBytes(BLOCK_SIZE / 8));
+                var key = new Rfc2898DeriveBytes(RandomSeedForKey, saltBytes, 1000);
+                SaltForKey = System.Convert.ToBase64String(key.GetBytes(BlockSize / 8));
             }
 
             {
-                var key = new Rfc2898DeriveBytes(randomSeedForValue, saltBytes, 1000);
-                Keys = key.GetBytes(KEY_SIZE / 8);
-                Iv = key.GetBytes(BLOCK_SIZE / 8);
+                var key = new Rfc2898DeriveBytes(RandomSeedForValue, saltBytes, 1000);
+                Keys = key.GetBytes(KeySize / 8);
+                Iv = key.GetBytes(BlockSize / 8);
             }
         }
-        #endregion
 
-        #region Public functions
         public static void DeleteKey(string key)
         {
             UnityEngine.PlayerPrefs.DeleteKey(MakeHash(key + SaltForKey));
@@ -146,13 +141,11 @@ namespace qbot.Utility
 
             return originalValue;
         }
-        #endregion
 
-        #region Private functions
         public static string MakeHash(string original)
         {
             using var md5 = new MD5CryptoServiceProvider();
-            var bytes = System.Text.Encoding.UTF8.GetBytes(original);
+            var bytes = Encoding.UTF8.GetBytes(original);
             var hashBytes = md5.ComputeHash(bytes);
 
             var hashToString = "";
@@ -167,8 +160,8 @@ namespace qbot.Utility
         public static byte[] Encrypt(byte[] bytesToBeEncrypted)
         {
             using var aes = new RijndaelManaged();
-            aes.KeySize = KEY_SIZE;
-            aes.BlockSize = BLOCK_SIZE;
+            aes.KeySize = KeySize;
+            aes.BlockSize = BlockSize;
 
             aes.Key = Keys;
             aes.IV = Iv;
@@ -184,8 +177,8 @@ namespace qbot.Utility
         {
             using var aes = new RijndaelManaged();
 
-            aes.KeySize = KEY_SIZE;
-            aes.BlockSize = BLOCK_SIZE;
+            aes.KeySize = KeySize;
+            aes.BlockSize = BlockSize;
 
             aes.Key = Keys;
             aes.IV = Iv;
@@ -230,17 +223,16 @@ namespace qbot.Utility
                 return string.Empty;
 
             var valueAndHash = Decrypt(encryptValue);
-            if (HASH_LEN > valueAndHash.Length)
+            if (HashLen > valueAndHash.Length)
                 return string.Empty;
 
-            var savedValue = valueAndHash.Substring(0, valueAndHash.Length - HASH_LEN);
-            var savedHash = valueAndHash.Substring(valueAndHash.Length - HASH_LEN);
+            var savedValue = valueAndHash.Substring(0, valueAndHash.Length - HashLen);
+            var savedHash = valueAndHash.Substring(valueAndHash.Length - HashLen);
 
             if (MakeHash(savedValue) != savedHash)
                 return string.Empty;
 
             return savedValue;
         }
-        #endregion
     }
 }
