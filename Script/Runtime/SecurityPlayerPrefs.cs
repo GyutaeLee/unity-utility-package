@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
+using Newtonsoft.Json;
 
 namespace qbot.Utility
 {
@@ -84,7 +86,13 @@ namespace qbot.Utility
             SetSecurityValue(key, value);
         }
 
-        public static bool GetBool(string key, bool defaultValue)
+        public static void SetList(string key, List<object> value)
+        {
+            var listValue = JsonConvert.SerializeObject(value);
+            SetSecurityValue(key, listValue);
+        }
+
+        public static bool GetBool(string key, bool defaultValue = false)
         {
             var originalValue = GetSecurityValue(key);
             if (string.IsNullOrEmpty(originalValue))
@@ -96,7 +104,7 @@ namespace qbot.Utility
             return result;
         }
 
-        public static int GetInt(string key, int defaultValue)
+        public static int GetInt(string key, int defaultValue = default)
         {
             var originalValue = GetSecurityValue(key);
             if (string.IsNullOrEmpty(originalValue))
@@ -108,7 +116,7 @@ namespace qbot.Utility
             return result;
         }
 
-        public static long GetLong(string key, long defaultValue)
+        public static long GetLong(string key, long defaultValue = default)
         {
             var originalValue = GetSecurityValue(key);
             if (string.IsNullOrEmpty(originalValue))
@@ -120,7 +128,7 @@ namespace qbot.Utility
             return result;
         }
 
-        public static float GetFloat(string key, float defaultValue)
+        public static float GetFloat(string key, float defaultValue = default)
         {
             var originalValue = GetSecurityValue(key);
             if (string.IsNullOrEmpty(originalValue))
@@ -132,7 +140,7 @@ namespace qbot.Utility
             return result;
         }
 
-        public static string GetString(string key, string defaultValue)
+        public static string GetString(string key, string defaultValue = default)
         {
             var originalValue = GetSecurityValue(key);
 
@@ -140,6 +148,14 @@ namespace qbot.Utility
                 return defaultValue;
 
             return originalValue;
+        }
+        
+        public static List<object> GetList(string key)
+        {
+            var originValue = GetSecurityValue(key);
+            var listValue = JsonConvert.DeserializeObject<List<object>>(originValue);
+            
+            return listValue;
         }
 
         public static string MakeHash(string original)

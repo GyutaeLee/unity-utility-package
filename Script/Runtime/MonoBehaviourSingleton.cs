@@ -4,8 +4,6 @@ namespace qbot.Utility
 {
     public class MonoBehaviourSingleton<T> : MonoBehaviour where T : Component
     {
-#region Properties
-
         public static T Instance
         {
             get
@@ -29,15 +27,7 @@ namespace qbot.Utility
             set => instance = value;
         }
 
-#endregion
-
-#region Fields
-
         private static T instance;
-
-#endregion
-
-#region Monobehaviour functions
 
         protected virtual void Awake()
         {
@@ -46,7 +36,5 @@ namespace qbot.Utility
                 Destroy(gameObject);
             }
         }
-
-#endregion
     }
 }
