@@ -13,7 +13,24 @@ namespace qbot.Utility
     [CreateAssetMenu(fileName = "TextDataContainer", menuName = "qbot/Text Data Container", order = 1)]
     public class TextDataContainer : ScriptableObject
     {
-        [SerializeField] private List<TextData> _texts;
+        [SerializeField] private List<TextData> _texts = new List<TextData>();
+
+        public void SetTextData(List<TextData> texts)
+        {
+            _texts = texts;
+            RemoveDuplicateKeys();
+        }
+
+        private void RemoveDuplicateKeys()
+        {
+            var uniqueData = new Dictionary<int, TextData>();
+            foreach (var textData in _texts)
+            {
+                uniqueData.TryAdd(textData.Key, textData);
+            }
+
+            _texts = new List<TextData>(uniqueData.Values);
+        }
 
         public string GetText(int key)
         {

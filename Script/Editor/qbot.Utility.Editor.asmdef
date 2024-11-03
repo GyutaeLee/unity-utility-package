@@ -1,0 +1,18 @@
+{
+    "name": "qbot.Utility.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:4d1c3f1419e7a4c469df72445ce57072"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
