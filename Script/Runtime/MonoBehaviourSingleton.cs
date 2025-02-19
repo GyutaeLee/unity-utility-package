@@ -1,40 +1,54 @@
+using System;
 using UnityEngine;
 
 namespace qbot.Utility
 {
     public class MonoBehaviourSingleton<T> : MonoBehaviour where T : Component
     {
+        private static T realInstance;
+
+        private static T MiddleInstance
+        {
+            get
+            {
+                OnInstanceCalled?.Invoke();
+                return realInstance;
+            }
+            set => realInstance = value;
+        }
+
         public static T Instance
         {
             get
             {
-                if (instance != null)
-                {
-                    return instance;
-                }
+                if (MiddleInstance != null)
+                    return MiddleInstance;
 
-                instance = FindObjectOfType<T>();
-                if (instance != null)
-                {
-                    return instance;
-                }
+                MiddleInstance = FindAnyObjectByType<T>();
+                if (MiddleInstance != null)
+                    return MiddleInstance;
 
                 var obj = new GameObject(typeof(T).Name);
-                instance = obj.AddComponent<T>();
+                MiddleInstance = obj.AddComponent<T>();
 
-                return instance;
+                return MiddleInstance;
             }
-            set => instance = value;
+            set => MiddleInstance = value;
         }
 
-        private static T instance;
+        public static event Action OnInstanceCalled;
 
         protected virtual void Awake()
         {
-            if (instance != null)
+            if (MiddleInstance != null)
             {
                 Destroy(gameObject);
             }
+        }
+
+        protected virtual void OnDestroy()
+        {
+            OnInstanceCalled = null;
         }
     }
 }
