@@ -28,6 +28,9 @@ namespace qbot.Utility
                 if (MiddleInstance != null)
                     return MiddleInstance;
 
+                if (typeof(T).IsAbstract)
+                    return null;
+                
                 var obj = new GameObject(typeof(T).Name);
                 MiddleInstance = obj.AddComponent<T>();
 
