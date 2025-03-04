@@ -25,14 +25,11 @@ namespace qbot.Utility
              * var randomSeedForValue = "24c79fmh24hfcaufc429cf824a8924mcfi";
              */
 
+            const string RandomSeedForKey = "5b6fcb4aaba45a506ec";
+            const string RandomSeedForValue = "24c79fmh24hfca4mcfi";
+
             // it must be 8 bytes
-            var saltBytes = new byte[] { };
-
-            // It doesn't matter the length, it's used to make keys
-            var randomSeedForKey = "";
-
-            // It doesn't matter the length, it's for creating keys and ivs for aes
-            var randomSeedForValue = "";
+            var saltBytes = new byte[] { 25, 16, 77, 85, 45, 73, 25, 63 };
 
             {
                 var key = new Rfc2898DeriveBytes(RandomSeedForKey, saltBytes, 1000);
@@ -149,12 +146,12 @@ namespace qbot.Utility
 
             return originalValue;
         }
-        
+
         public static List<object> GetList(string key)
         {
             var originValue = GetSecurityValue(key);
             var listValue = JsonConvert.DeserializeObject<List<object>>(originValue);
-            
+
             return listValue;
         }
 
