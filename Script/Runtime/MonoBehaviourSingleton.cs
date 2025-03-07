@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace qbot.Utility
 {
-    public class MonoBehaviourSingleton<T> : MonoBehaviour where T : Component
+    public abstract class MonoBehaviourSingleton<T> : MonoBehaviour where T : Component
     {
         private static T realInstance;
 
@@ -40,6 +40,11 @@ namespace qbot.Utility
         }
 
         public static event Action OnInstanceCalled;
+
+        protected virtual void Start()
+        {
+            
+        }
 
         protected virtual void Awake()
         {
