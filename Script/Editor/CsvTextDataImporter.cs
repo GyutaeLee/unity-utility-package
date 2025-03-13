@@ -96,8 +96,11 @@ namespace qbot.Utility
                         if (int.TryParse(values[0].Trim(), out var key) == false)
                             continue;
 
-                        var koreanValue = values[1].Trim('"').Trim(); // Korean text
-                        var englishValue = values[2].Trim('"').Trim(); // English text
+                        var koreanValue = values[1].Trim(); // Korean text
+                        var englishValue = values[2].Trim(); // English text
+                        
+                        koreanValue = koreanValue.Replace("…", "...");
+                        englishValue = englishValue.Replace("…", "...");
 
                         koreanDataList.Add(new TextData { Key = key, Value = koreanValue });
                         englishDataList.Add(new TextData { Key = key, Value = englishValue });
