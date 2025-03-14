@@ -16,9 +16,10 @@ namespace qbot.Utility
             get => EditorPrefs.GetString($"{ProjectPrefix}.{nameof(CsvTextDataImporter)}.{nameof(CsvFilePath)}");
             set => EditorPrefs.SetString($"{ProjectPrefix}.{nameof(CsvTextDataImporter)}.{nameof(CsvFilePath)}", value);
         }
-
+        
         private TextDataContainer _koreanDataContainer;
         private TextDataContainer _englishDataContainer;
+        private TextDataContainer _japaneseDataContainer;
 
         [MenuItem("qbot/Utility/CSV Text Data Importer")]
         public static void ShowWindow()
@@ -56,9 +57,10 @@ namespace qbot.Utility
             // Language-specific data container assignments
             _koreanDataContainer = (TextDataContainer)EditorGUILayout.ObjectField("Korean Data Container", _koreanDataContainer, typeof(TextDataContainer), false);
             _englishDataContainer = (TextDataContainer)EditorGUILayout.ObjectField("English Data Container", _englishDataContainer, typeof(TextDataContainer), false);
+            _japaneseDataContainer = (TextDataContainer)EditorGUILayout.ObjectField("Japanese Data Container", _japaneseDataContainer, typeof(TextDataContainer), false);
 
             // Enable Import button only when all fields are properly set
-            GUI.enabled = !string.IsNullOrEmpty(CsvFilePath) && _koreanDataContainer != null && _englishDataContainer != null;
+            GUI.enabled = !string.IsNullOrEmpty(CsvFilePath) && _koreanDataContainer != null && _englishDataContainer != null && _japaneseDataContainer != null;
             if (GUILayout.Button("Import Data"))
             {
                 ImportData();
@@ -77,6 +79,7 @@ namespace qbot.Utility
 
             var koreanDataList = new List<TextData>();
             var englishDataList = new List<TextData>();
+            var japaneseDataList = new List<TextData>();
 
             try
             {
@@ -98,22 +101,27 @@ namespace qbot.Utility
 
                         var koreanValue = values[1].Trim(); // Korean text
                         var englishValue = values[2].Trim(); // English text
+                        var japaneseValue = values[3].Trim(); // English text
                         
                         koreanValue = koreanValue.Replace("…", "...");
                         englishValue = englishValue.Replace("…", "...");
+                        japaneseValue = japaneseValue.Replace("…", "...");
 
                         koreanDataList.Add(new TextData { Key = key, Value = koreanValue });
                         englishDataList.Add(new TextData { Key = key, Value = englishValue });
+                        japaneseDataList.Add(new TextData { Key = key, Value = japaneseValue });
                     }
                 }
 
                 // Set data for each language container
                 _koreanDataContainer.SetTextData(koreanDataList);
                 _englishDataContainer.SetTextData(englishDataList);
+                _japaneseDataContainer.SetTextData(japaneseDataList);
 
                 // Mark containers as dirty to ensure changes are saved
                 EditorUtility.SetDirty(_koreanDataContainer);
                 EditorUtility.SetDirty(_englishDataContainer);
+                EditorUtility.SetDirty(_japaneseDataContainer);
 
                 Debug.Log("CSV data import completed successfully.");
             }
