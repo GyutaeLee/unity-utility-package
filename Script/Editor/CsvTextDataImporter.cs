@@ -16,6 +16,24 @@ namespace qbot.Utility
             get => EditorPrefs.GetString($"{ProjectPrefix}.{nameof(CsvTextDataImporter)}.{nameof(CsvFilePath)}");
             set => EditorPrefs.SetString($"{ProjectPrefix}.{nameof(CsvTextDataImporter)}.{nameof(CsvFilePath)}", value);
         }
+
+        private string KoreanDataContainerPath
+        {
+            get => EditorPrefs.GetString($"{ProjectPrefix}.{nameof(CsvTextDataImporter)}.{nameof(KoreanDataContainerPath)}");
+            set => EditorPrefs.SetString($"{ProjectPrefix}.{nameof(CsvTextDataImporter)}.{nameof(KoreanDataContainerPath)}", value);
+        }
+        
+        private string EnglishDataContainerPath
+        {
+            get => EditorPrefs.GetString($"{ProjectPrefix}.{nameof(CsvTextDataImporter)}.{nameof(EnglishDataContainerPath)}");
+            set => EditorPrefs.SetString($"{ProjectPrefix}.{nameof(CsvTextDataImporter)}.{nameof(EnglishDataContainerPath)}", value);
+        }
+        
+        private string JapaneseDataContainerPath
+        {
+            get => EditorPrefs.GetString($"{ProjectPrefix}.{nameof(CsvTextDataImporter)}.{nameof(JapaneseDataContainerPath)}");
+            set => EditorPrefs.SetString($"{ProjectPrefix}.{nameof(CsvTextDataImporter)}.{nameof(JapaneseDataContainerPath)}", value);
+        }
         
         private TextDataContainer _koreanDataContainer;
         private TextDataContainer _englishDataContainer;
@@ -32,6 +50,33 @@ namespace qbot.Utility
         private void OnEnable()
         {
             _csvFilePath = CsvFilePath;
+
+            if (string.IsNullOrEmpty(KoreanDataContainerPath) == false)
+            {
+                var container = AssetDatabase.LoadAssetAtPath<TextDataContainer>(KoreanDataContainerPath);
+                if (container != null)
+                {
+                    _koreanDataContainer = container;
+                }
+            }
+            
+            if (string.IsNullOrEmpty(EnglishDataContainerPath) == false)
+            {
+                var container = AssetDatabase.LoadAssetAtPath<TextDataContainer>(EnglishDataContainerPath);
+                if (container != null)
+                {
+                    _englishDataContainer = container;
+                }
+            }
+            
+            if (string.IsNullOrEmpty(JapaneseDataContainerPath) == false)
+            {
+                var container = AssetDatabase.LoadAssetAtPath<TextDataContainer>(JapaneseDataContainerPath);
+                if (container != null)
+                {
+                    _japaneseDataContainer = container;
+                }
+            }
         }
 
         private void OnGUI()
@@ -55,10 +100,36 @@ namespace qbot.Utility
             EditorGUILayout.EndHorizontal();
 
             // Language-specific data container assignments
+            EditorGUI.BeginChangeCheck();
             _koreanDataContainer = (TextDataContainer)EditorGUILayout.ObjectField("Korean Data Container", _koreanDataContainer, typeof(TextDataContainer), false);
+            if (EditorGUI.EndChangeCheck())
+            {
+                if (_koreanDataContainer != null)
+                {
+                    KoreanDataContainerPath = AssetDatabase.GetAssetPath(_koreanDataContainer);
+                } 
+            }
+            
+            EditorGUI.BeginChangeCheck();
             _englishDataContainer = (TextDataContainer)EditorGUILayout.ObjectField("English Data Container", _englishDataContainer, typeof(TextDataContainer), false);
+            if (EditorGUI.EndChangeCheck())
+            {
+                if (_englishDataContainer != null)
+                {
+                    EnglishDataContainerPath = AssetDatabase.GetAssetPath(_englishDataContainer);
+                }
+            }
+            
+            EditorGUI.BeginChangeCheck();
             _japaneseDataContainer = (TextDataContainer)EditorGUILayout.ObjectField("Japanese Data Container", _japaneseDataContainer, typeof(TextDataContainer), false);
-
+            if (EditorGUI.EndChangeCheck())
+            {
+                if (_japaneseDataContainer != null)
+                {
+                    JapaneseDataContainerPath = AssetDatabase.GetAssetPath(_japaneseDataContainer);
+                }
+            }
+            
             // Enable Import button only when all fields are properly set
             GUI.enabled = !string.IsNullOrEmpty(CsvFilePath) && _koreanDataContainer != null && _englishDataContainer != null && _japaneseDataContainer != null;
             if (GUILayout.Button("Import Data"))
