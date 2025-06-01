@@ -1,4 +1,4 @@
-# Unity-Utility-Packages
+# unity-utility-packages
 
 ### Summary
 
