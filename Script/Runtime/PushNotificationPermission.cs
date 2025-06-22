@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 
 #if UNITY_IOS
+using System.Runtime.InteropServices;
 using Unity.Notifications.iOS;
 #endif
 
