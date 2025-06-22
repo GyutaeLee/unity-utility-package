@@ -87,7 +87,7 @@ namespace qbot.Utility
 
         /* ─────────────────────────────── ② REQUEST PERMISSION ─────────────────────────────── */
 
-        public static void RequestPermission(Action<Status> onComplete, Status fallback = Status.Denied)
+        public static void RequestPermission(Action<Status> onComplete = null, Status fallback = Status.Denied)
         {
 #if UNITY_ANDROID
             RequestAndroidPermission(onComplete, fallback);
