@@ -37,18 +37,20 @@ namespace qbot.Utility
 #endif
         }
 
+#if UNITY_ANDROID
         private static Status CheckAndroidStatus(Status fallback)
         {
             try
             {
                 using var version = new AndroidJavaClass("android.os.Build$VERSION");
-                int sdk = version.GetStatic<int>("SDK_INT");
+                var sdk = version.GetStatic<int>("SDK_INT");
 
-                if (sdk < 33) return Status.Granted;
+                if (sdk < 33) 
+                    return Status.Granted;
 
                 using var unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
                 using var activity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
-                int perm = activity.Call<int>("checkSelfPermission",
+                var perm = activity.Call<int>("checkSelfPermission",
                     "android.permission.POST_NOTIFICATIONS");
 
                 return perm == 0 ? Status.Granted : Status.Denied;
@@ -59,6 +61,7 @@ namespace qbot.Utility
                 return fallback;
             }
         }
+#endif
 
 #if UNITY_IOS
         private static Status CheckIOSStatus(Status fallback)

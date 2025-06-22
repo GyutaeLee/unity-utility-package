@@ -39,7 +39,7 @@ namespace qbot.Utility
         private const string NativeSource = @"
 #import <UIKit/UIKit.h>
 
-extern ""C"" void OpeniOSNotificationSettings()
+extern ""C"" void OpenIOSNotificationSettings()
 {
     if (@available(iOS 16.0, *)) {
         [[UIApplication sharedApplication] openURL:
