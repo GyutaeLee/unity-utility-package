@@ -1,3 +1,4 @@
+#if UNITY_IOS && QBOT_UTILITY_PUSH_NOTIFICATIONS
 using System.IO;
 using UnityEditor;
 using UnityEditor.Callbacks;
@@ -36,8 +37,7 @@ namespace qbot.Utility
             proj.WriteToFile(projPath);
         }
 
-        private const string NativeSource = @"
-#import <UIKit/UIKit.h>
+        private const string NativeSource = @"#import <UIKit/UIKit.h>
 
 extern ""C"" void OpenIOSNotificationSettings()
 {
@@ -57,3 +57,4 @@ extern ""C"" void OpenIOSNotificationSettings()
 }";
     }
 }
+#endif

@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using System.Runtime.InteropServices;
 
 #if UNITY_IOS
 using Unity.Notifications.iOS;
@@ -24,8 +23,6 @@ namespace qbot.Utility
         [DllImport("__Internal")] private static extern void OpenIOSNotificationSettings(); // Implementation is inserted by PostProcessBuild
 #endif
 
-        /* ─────────────────────────────── ① CURRENT STATUS ─────────────────────────────── */
-
         public static void GetStatus(Action<Status> onComplete, Status fallback = Status.NotDetermined)
         {
 #if UNITY_ANDROID
@@ -45,7 +42,7 @@ namespace qbot.Utility
                 using var version = new AndroidJavaClass("android.os.Build$VERSION");
                 var sdk = version.GetStatic<int>("SDK_INT");
 
-                if (sdk < 33) 
+                if (sdk < 33)
                     return Status.Granted;
 
                 using var unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
@@ -85,42 +82,41 @@ namespace qbot.Utility
         }
 #endif
 
-        /* ─────────────────────────────── ② REQUEST PERMISSION ─────────────────────────────── */
-
-        public static void RequestPermission(Action<Status> onComplete = null, Status fallback = Status.Denied)
+        public static void OpenSettings()
         {
+            GetStatus(status =>
+            {
+                switch (status)
+                {
+                    case Status.Granted:
+                    case Status.NotDetermined:
+                    case Status.Denied:
 #if UNITY_ANDROID
-            RequestAndroidPermission(onComplete, fallback);
+                        OpenAndroidAppSettings();
 #elif UNITY_IOS
-            OpenIOSNotificationSettings(); // iOS 16+: notification settings, earlier versions: app settings
-            GetStatus(onComplete, fallback); // Re-check status immediately
-#else
-            onComplete?.Invoke(fallback); // Editor / other platforms
+                        OpenIOSNotificationSettings();
 #endif
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(status), status, null);
+                }
+            });
         }
 
 #if UNITY_ANDROID
-        private static void RequestAndroidPermission(Action<Status> cb, Status fallback)
+        private static void OpenAndroidAppSettings()
         {
-            try
-            {
-                using var version = new AndroidJavaClass("android.os.Build$VERSION");
-                int sdk = version.GetStatic<int>("SDK_INT");
-                if (sdk >= 33)
-                {
-                    using var unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
-                    using var activity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
-                    activity.Call("requestPermissions",
-                                  new[] { "android.permission.POST_NOTIFICATIONS" }, 9284);
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.LogWarning($"[PushPerm] Android request failed: {e}");
-            }
+            const int FlagActivityNewTask = 0x10000000;
 
-            // Immediately re-check the status since no callback is wired on Android
-            GetStatus(cb, fallback);
+            using var unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+            using var activity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
+            using var settings = new AndroidJavaClass("android.provider.Settings");
+
+            var intent = new AndroidJavaObject("android.content.Intent", settings.GetStatic<string>("ACTION_APP_NOTIFICATION_SETTINGS"));
+            intent.Call<AndroidJavaObject>("addFlags", FlagActivityNewTask);
+            intent.Call<AndroidJavaObject>("putExtra", "android.provider.extra.APP_PACKAGE", activity.Call<string>("getPackageName"));
+
+            activity.Call("startActivity", intent);
         }
 #endif
     }

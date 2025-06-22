@@ -32,6 +32,10 @@ namespace qbot.Utility
         private const string AndroidChannelId = "default";
         private static bool initialized;
 
+#if UNITY_ANDROID
+        private static AndroidJavaObject lastIntent;
+#endif
+
         public static void Initialize()
         {
             if (initialized)
@@ -41,10 +45,36 @@ namespace qbot.Utility
 
 #if UNITY_ANDROID
             InitializeAndroid();
+            Application.focusChanged += OnAppFocusChanged;
 #elif UNITY_IOS
             InitializeIOS();
 #endif
         }
+
+#if UNITY_ANDROID
+        private static void OnAppFocusChanged(bool hasFocus)
+        {
+            if (hasFocus == false)
+                return;
+
+            using var unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+            using var activity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
+            using var intent = activity.Call<AndroidJavaObject>("getIntent");
+            if (intent == null || intent == lastIntent)
+                return;
+
+            var action = intent.Call<string>("getStringExtra", NotificationActionKey);
+            var reward = intent.Call<string>("getStringExtra", NotificationRewardIdKey);
+            if (string.IsNullOrEmpty(action))
+                return;
+
+            lastIntent = intent;
+            InvokePushIntent(new PushNotificationPayload { Action = action, Reward = reward });
+
+            intent.Call("removeExtra", NotificationActionKey);
+            intent.Call("removeExtra", NotificationRewardIdKey);
+        }
+#endif
 
         private static void InvokePushIntent(PushNotificationPayload payload)
         {
@@ -55,38 +85,46 @@ namespace qbot.Utility
 #if UNITY_ANDROID
         private static void InitializeAndroid()
         {
-            const string postPerm = "android.permission.POST_NOTIFICATIONS";
-            if (Permission.HasUserAuthorizedPermission(postPerm) == false)
-                Permission.RequestUserPermission(postPerm);
+            const string PostPerm = "android.permission.POST_NOTIFICATIONS";
+            if (Permission.HasUserAuthorizedPermission(PostPerm) == false)
+            {
+                Permission.RequestUserPermission(PostPerm);
+            }
 
-            // channel
-            AndroidNotificationCenter.RegisterNotificationChannel(
-                new AndroidNotificationChannel(AndroidChannelId, "Default", "General", Importance.Default));
+            AndroidNotificationCenter.RegisterNotificationChannel(new AndroidNotificationChannel(AndroidChannelId, "Default", "General", Importance.Default));
+            CoroutineManager.Instance.StartManagedCoroutine(WaitAndQueryLastNotificationIntent());
+        }
 
-            // cold‑launch click
+        /// <summary>
+        /// Handle cold-launch push intent after a short delay to ensure event subscribers are ready
+        /// </summary>
+        private static IEnumerator WaitAndQueryLastNotificationIntent()
+        {
+            yield return null;
             var intent = AndroidNotificationCenter.GetLastNotificationIntent();
             if (intent != null)
+            {
                 TryParseAndHandlePayload(intent.Notification.IntentData);
+            }
         }
 #endif
 
 #if UNITY_IOS
         private static void InitializeIOS()
         {
-            // foreground / background click
+            // Handle push notifications received while app is running (foreground/background)
             iOSNotificationCenter.OnNotificationReceived += OnIosNotificationClicked;
 
-            // cold‑launch click
+            // Handle cold-launch push notification after one frame to ensure event subscribers are ready
             CoroutineManager.Instance.StartManagedCoroutine(WaitAndQueryLastNotification());
         }
 
         /// <summary>
-        /// 콜드런치 핸들러를 한 프레임 뒤로 미루어 OnPushIntentReceived 등록 보장
+        /// Delays cold-launch handler by one frame to ensure OnPushIntentReceived has subscribers
         /// </summary>
-        /// <returns></returns>
         private static IEnumerator WaitAndQueryLastNotification()
         {
-            yield return null; // 한 프레임 대기
+            yield return null;
             yield return QueryLastRespondedIosNotification();
         }
 
@@ -196,14 +234,16 @@ namespace qbot.Utility
 #if UNITY_ANDROID
         private static void TryParseAndHandlePayload(string json)
         {
-            if (string.IsNullOrEmpty(json)) 
+            if (string.IsNullOrEmpty(json))
                 return;
-            
+
             try
             {
                 var data = JsonUtility.FromJson<PushNotificationPayload>(json);
                 if (data != null)
+                {
                     InvokePushIntent(data);
+                }
             }
             catch (Exception ex)
             {
